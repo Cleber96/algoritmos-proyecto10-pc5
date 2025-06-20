@@ -1,7 +1,7 @@
 # src/common/models.py
 import numpy as np
 from typing import List, Dict, Any, Union
-import uuid
+import uuid # Aunque no se usa directamente en Vector, es buena práctica tenerla si la tenías por algo más.
 
 class Vector:
     """
@@ -52,9 +52,11 @@ class Vector:
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Vector):
             return NotImplemented
+        # Comparamos IDs y los datos del vector.
         return self.id == other.id and np.array_equal(self.data, other.data)
 
     def __hash__(self) -> int:
+        # Usamos solo el ID para el hash, asumiendo que es único.
         return hash(self.id)
 
 
@@ -83,26 +85,35 @@ class SearchResult:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'SearchResult':
-        """Crea un objeto SearchResult desde un diccionario."""
+        """
+        Crea un objeto SearchResult desde un diccionario.
+        Intenta reconstruir el Vector completo si se proporcionan los datos.
+        """
         if "vector_id" not in data or "distance" not in data:
             raise ValueError("Dictionary must contain 'vector_id' and 'distance' keys.")
-        # Nota: Para reconstruir el Vector completo, necesitarías el 'vector_data' completo
-        # Aquí solo reconstruimos un Vector parcial para el SearchResult si el `vector_data` no está completo.
-        # En un sistema real, solo pasarías el ID y la distancia, y el cliente consultaría el vector completo si lo necesita.
-        # Para la simulación, podemos asumir que el snippet es suficiente para la representación.
-        vector_data = data.get("vector_data_snippet", []) # Asumiendo que es un snippet si no está completo
-        if isinstance(vector_data, list) and '...' in vector_data:
-            # Si es un snippet, no podemos reconstruir el vector completo, creamos uno dummy o lo omitimos.
-            # Para este caso, simplificamos creando un Vector con data vacía, ya que solo el ID y dist importan para el resultado.
-            dummy_vector = Vector(id=data["vector_id"], data=[0.0] * 1) # Vector con datos dummy
-            dummy_vector.metadata = data.get("metadata", {})
-            return cls(dummy_vector, data["distance"])
-        else:
-            # Si el snippet es el vector completo (ej. para vectores de baja dim), o si pasas el 'vector' completo
-            full_vector_data = data.get("vector_data", vector_data) # Intenta obtener 'vector_data' completo
-            full_vector = Vector(id=data["vector_id"], data=full_vector_data, metadata=data.get("metadata", {}))
-            return cls(full_vector, data["distance"])
-
+        
+        # Preferimos 'vector' (datos completos) si está disponible, sino 'vector_data_snippet'.
+        # Esto es importante para reconstruir el objeto Vector correctamente.
+        vector_data = data.get("vector") 
+        if vector_data is None:
+            vector_data = data.get("vector_data_snippet", []) 
+            if '...' in vector_data:
+                 # Si solo hay un snippet y no los datos completos, creamos un vector con datos dummy.
+                 # En un escenario real, si se necesita el vector completo, se haría otra llamada.
+                 logger.warning(f"Reconstruyendo SearchResult para {data['vector_id']} con datos de vector parciales/dummy.")
+                 dummy_vector = Vector(id=data["vector_id"], data=np.array([0.0], dtype=np.float32)) 
+                 dummy_vector.metadata = data.get("metadata", {})
+                 return cls(dummy_vector, data["distance"])
+        
+        # Si tenemos los datos completos o un snippet que es el vector completo.
+        full_vector = Vector(id=data["vector_id"], data=vector_data, metadata=data.get("metadata", {}))
+        return cls(full_vector, data["distance"])
 
     def __repr__(self) -> str:
         return f"SearchResult(vector_id='{self.vector.id}', distance={self.distance:.4f})"
+
+    def __lt__(self, other: Any) -> bool:
+        """Permite comparar SearchResults por distancia (útil para heaps/ordenamiento)."""
+        if not isinstance(other, SearchResult):
+            return NotImplemented
+        return self.distance < other.distance
