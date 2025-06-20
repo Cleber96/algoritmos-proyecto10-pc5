@@ -1,0 +1,9 @@
+numpy          # Para operaciones vectoriales eficientes
+Flask          # O FastAPI, según tu elección para los servicios web
+requests       # Para que el orquestador y los workers se comuniquen entre sí
+pytest         # Para las pruebas unitarias
+flake8         # Para el linting de código (opcional, pero buena práctica)
+black          # Para formateo de código (opcional, pero buena práctica)
+ruff           # Linter y formateador rápido (alternativa a flake8+black, o complemento)
+pydantic       # Para validación de modelos de datos (muy útil con FastAPI, opcional con Flask)
+

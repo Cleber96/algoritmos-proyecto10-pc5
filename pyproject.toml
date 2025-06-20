@@ -1,0 +1,76 @@
+# pyproject.toml
+[tool.poetry]
+name = "distributed-vector-search"
+version = "0.1.0"
+description = "A distributed vector similarity search system using M-Tree and Consistent Hashing."
+authors = ["Tu Nombre <tu.email@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13" # Define el rango de versiones de Python compatibles
+numpy = "^1.26.0"      # Versión con caret para permitir actualizaciones menores
+flask = "^3.0.3"       # O fastapi = "^0.111.0"
+requests = "^2.31.0"
+pydantic = "^2.7.1"    # Si usas Pydantic para validación
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.1"
+black = "^24.4.2"
+ruff = "^0.4.4"
+# snakeviz = "^2.2.0" # Para profiling con cProfile
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Configuración para Black (formateador de código)
+[tool.black]
+line-length = 120
+target-version = ['py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+
+# Configuración para Ruff (linter y formateador)
+[tool.ruff]
+line-length = 120
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes
+    "C",   # McCabe complexity
+    "I",   # Isort
+    "N",   # Naming conventions
+    "D",   # pydocstyle
+    "UP",  # pyupgrade
+    "SIM", # flake8-simplify
+    "ANN", # flake8-annotations
+    "ASYNC", # flake8-async
+]
+ignore = [
+    "E501", # Line too long (handled by black)
+    "ANN101", # Missing type annotation for self in method
+    "ANN102", # Missing type annotation for cls in classmethod
+]
+# Excluir archivos o directorios
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".ruff_cache",
+    ".svn",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "build",
+    "dist",
+    "docs", # No lintear la carpeta de docs
+    "notebooks", # No lintear notebooks directamente
+    "data", # No lintear la carpeta de datos
+]
+
+[tool.ruff.per-file-ignores]
+# Ignorar algunas reglas en archivos de prueba si son muy estrictas
+"tests/*.py" = ["D"] # No exigir docstrings en tests
